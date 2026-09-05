@@ -13,6 +13,7 @@
     "backlog":                 { "label": "Backlog at period end",         "unit": "tickets", "goal": 110, "warning": 160, "direction": "lower_is_better" },
     "over_24h_unanswered":     { "label": "Open over 24h with no reply",   "unit": "tickets", "goal": 12,  "warning": 25,  "direction": "lower_is_better" },
     "reopen_rate":             { "label": "Reopen rate",                   "unit": "percent", "goal": 5,   "warning": 7,   "direction": "lower_is_better" },
-    "refund_rate":             { "label": "Refund rate",                   "unit": "percent", "goal": 2.5, "warning": 3.2, "direction": "lower_is_better" }
+    "refund_rate":             { "label": "Refund rate",                   "unit": "percent", "goal": 2.5, "warning": 3.2, "direction": "lower_is_better" },
+    "chargeback_rate":         { "label": "Chargeback rate",               "unit": "percent", "goal": 0.5, "warning": 0.9, "direction": "lower_is_better" }
   }
 }

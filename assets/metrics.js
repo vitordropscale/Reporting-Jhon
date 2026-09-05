@@ -39,6 +39,10 @@ export const DIRECTION = {
   partial_retention: 'higher_is_better',
   replacement_cost_usd: 'lower_is_better',
   second_replacements: 'lower_is_better',
+  chargeback_rate: 'lower_is_better',
+  chargeback_count: 'lower_is_better',
+  chargeback_value_usd: 'lower_is_better',
+  chargeback_win_rate: 'higher_is_better',
 };
 
 /* =============================================================================
@@ -192,15 +196,18 @@ export function periods(meta, override) {
  */
 export function revenueForWindow(revenueRows, window) {
   let total = 0;
+  let orders = 0;
   let exact = false;
   for (const row of revenueRows) {
     const shared = overlapDays(row.week_start, row.week_end, window.start, window.end);
     if (shared <= 0) continue;
     const weekDays = windowLength(row.week_start, row.week_end);
     if (shared === weekDays && windowLength(window.start, window.end) === weekDays) exact = true;
-    total += row.revenue_usd * (shared / weekDays);
+    const share = shared / weekDays;
+    total += row.revenue_usd * share;
+    orders += (row.orders || 0) * share;
   }
-  return { total, isExact: exact };
+  return { total, orders, isExact: exact };
 }
 
 /** Pool every per-ticket value out of a set of daily rows. */
@@ -398,6 +405,112 @@ export function replacementsByStore(replacementRows) {
   );
 }
 
+/* --- chargebacks ------------------------------------------------------------
+   Two different questions live here, and conflating them is the usual way a
+   chargeback report ends up wrong:
+
+   1. HOW MANY CAME IN during the period. A flow. Scoped by opened_at, and the
+      only figure the rate is computed from.
+
+   2. WHERE THEY STAND with the bank right now. A snapshot. A dispute opened in
+      July and still undecided is pending today, whatever period is selected —
+      so the status totals deliberately ignore the period, exactly like the
+      queue in the daily view.
+
+   The rate itself is COUNT ÷ ORDERS, not value ÷ revenue. That is the ratio the
+   card networks monitor and threshold on, so it is the one that decides whether
+   a store lands in a monitoring programme. The value-based ratio is reported
+   beside it because it is what the money actually costs.
+   -------------------------------------------------------------------------- */
+
+/** Disputes opened inside a window. */
+export function chargebacksOpenedIn(rows, window) {
+  return byEventPeriod(rows, 'opened_at', window.start, window.end);
+}
+
+export const CHARGEBACK_PENDING = ['open', 'under_review'];
+
+/** Still with the bank — no decision yet. A snapshot, never period-scoped. */
+export function chargebacksPending(rows) {
+  return rows.filter((c) => CHARGEBACK_PENDING.includes(c.status));
+}
+
+/** Decided one way or the other. `accepted` counts as decided: we chose to lose. */
+export function chargebacksDecided(rows) {
+  return rows.filter((c) => !CHARGEBACK_PENDING.includes(c.status));
+}
+
+export function chargebackValueUsd(rows) {
+  return sum(rows.map((c) => c.amount_usd));
+}
+
+/**
+ * Dispute fees. Charged per case by the processor and NOT refunded when the
+ * dispute is won, which is why they are totalled across every row rather than
+ * only the lost ones.
+ */
+export function chargebackFeesUsd(rows) {
+  return sum(rows.map((c) => c.fee_usd || 0));
+}
+
+/** Count ÷ orders, as a percentage. The ratio card networks threshold on. */
+export function chargebackRate(count, orders) {
+  return pct(count, orders);
+}
+
+/** Won ÷ decided. Pending cases are excluded — they would understate it. */
+export function chargebackWinRate(rows) {
+  const decided = chargebacksDecided(rows);
+  const won = decided.filter((c) => c.status === 'won');
+  return pct(won.length, decided.length);
+}
+
+export function chargebacksByReason(rows) {
+  return groupSum(rows, 'reason', 'amount_usd');
+}
+
+export function chargebacksByStatus(rows) {
+  return groupSum(rows, 'status', 'amount_usd');
+}
+
+export function chargebacksByNetwork(rows) {
+  return groupSum(rows, 'network', 'amount_usd');
+}
+
+/**
+ * The full money picture for a set of disputes.
+ *
+ * `netCost` is what the disputes actually took: the value lost plus every fee,
+ * including the fees on the ones that were won. A report that shows only the
+ * lost amount understates the damage by the fee on every single case.
+ */
+export function chargebackOutcome(rows) {
+  const pick = (status) => rows.filter((c) => c.status === status);
+  const won = pick('won');
+  const lost = pick('lost');
+  const accepted = pick('accepted');
+  const pending = chargebacksPending(rows);
+
+  const lostValue = chargebackValueUsd(lost) + chargebackValueUsd(accepted);
+  const fees = chargebackFeesUsd(rows);
+
+  return {
+    total: rows.length,
+    totalValue: chargebackValueUsd(rows),
+    pendingCount: pending.length,
+    pendingValue: chargebackValueUsd(pending),
+    wonCount: won.length,
+    wonValue: chargebackValueUsd(won),
+    lostCount: lost.length + accepted.length,
+    lostValue,
+    acceptedCount: accepted.length,
+    decidedCount: won.length + lost.length + accepted.length,
+    winRate: chargebackWinRate(rows),
+    feesUsd: fees,
+    netCost: lostValue + fees,
+  };
+}
+
 /** Shared grouper: returns [{ key, count, total }] sorted by total descending. */
 function groupSum(rows, keyField, valueField) {
   const acc = new Map();
@@ -521,6 +634,41 @@ export function computePeriod(data, storeIds, window) {
       byStore: replacementsByStore(replacements),
       rows: replacements,
     },
+    chargebacks: (() => {
+      const opened = chargebacksOpenedIn(byStores(data.chargebacks, storeIds), window);
+      return {
+        count: opened.length,
+        valueUsd: chargebackValueUsd(opened),
+        orders: revenue.orders,
+        /** Count ÷ orders — the ratio the card networks threshold on. */
+        rate: chargebackRate(opened.length, revenue.orders),
+        /** Value ÷ revenue — what it costs, reported beside the rate. */
+        valueRate: pct(chargebackValueUsd(opened), revenue.total),
+        byReason: chargebacksByReason(opened),
+        rows: opened,
+      };
+    })(),
+  };
+}
+
+/**
+ * Where every dispute stands with the bank right now, for the stores in scope.
+ *
+ * Deliberately NOT period-scoped: a dispute opened before the reported week and
+ * still undecided is money that is still at risk today. Scoping this to the
+ * week would report it as though it had gone away.
+ */
+export function chargebackSnapshot(data, storeIds) {
+  const rows = byStores(data.chargebacks, storeIds);
+  return {
+    ...chargebackOutcome(rows),
+    byReason: chargebacksByReason(rows),
+    byStatus: chargebacksByStatus(rows),
+    byNetwork: chargebacksByNetwork(rows),
+    oldestPending: chargebacksPending(rows)
+      .slice()
+      .sort((a, b) => (a.opened_at < b.opened_at ? -1 : 1))[0] || null,
+    rows,
   };
 }
 
@@ -752,6 +900,9 @@ export function goalsTable(data, storeIds, override) {
     over_24h_unanswered: snap.over24hUnanswered,
     reopen_rate: cur.reopenRate,
     refund_rate: cur.refunds.rate,
+    // 0.9% is where Visa's monitoring programme starts; 0.5% is the level a
+    // healthy account sits at. Both thresholds live in meta.json, not here.
+    chargeback_rate: cur.chargebacks.rate,
   };
 
   return Object.entries(data.meta.targets)

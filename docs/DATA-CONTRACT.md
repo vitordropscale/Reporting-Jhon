@@ -1,6 +1,6 @@
 # Data contract
 
-Everything the dashboard renders comes from the eight JSON files in `data/`. The UI never
+Everything the dashboard renders comes from the nine JSON files in `data/`. The UI never
 computes a number from anywhere else, and no module except `assets/data.js` reads these files.
 
 **Phase 2 replaces the *contents* of these files. It does not change their shape, and it does
@@ -84,7 +84,7 @@ counts as a good number — without touching code.
 
 Metric ids currently consumed by the goals table: `frt_median_hours`,
 `pct_answered_under_24h`, `resolution_median_hours`, `backlog`, `over_24h_unanswered`,
-`reopen_rate`, `refund_rate`. Removing an entry removes its row; adding one back restores it.
+`reopen_rate`, `refund_rate`, `chargeback_rate`. Removing an entry removes its row; adding one back restores it.
 
 ---
 
@@ -211,13 +211,14 @@ It is never refunds ÷ tickets. That is why `revenue.json` exists.
 
 ## `revenue.json`
 
-Store revenue, used only as the **denominator of the refund rate**. Per store, per week.
+Shopify facts per store per week: the **denominator of the refund rate** (revenue) and of the **chargeback rate** (orders).
 
 | Field | Type | Notes |
 |---|---|---|
 | `store_id` | string | |
 | `week_start` / `week_end` | date | Inclusive. Must line up with the period bounds in `meta.json` — the current-period row has `week_start === meta.period_start`. |
 | `revenue_usd` | number | Net revenue for that store and week, **before** refunds are subtracted. Subtracting them first would make the refund rate meaningless. |
+| `orders` | integer | Order count for that store and week. The denominator of the **chargeback rate** — without it that rate cannot be computed at all. |
 
 Phase 2 note: this is the one file that does not come from a helpdesk. It comes from Shopify,
 per store. If the Shopify figure is post-refund, it must be grossed back up before it lands
@@ -279,3 +280,60 @@ hand and it is not tied to a reporting period — a plan is open until it is clo
 - A store with no rows renders an explicit "Nothing recorded for this selection", not an empty
   page — so an empty tab is never mistaken for a broken one.
 - The Action plans tab ignores the period selector. Plans are not scoped to a reporting week.
+
+---
+
+## `chargebacks.json`
+
+**One row per dispute.** Also carries `snapshot_at` — the instant the status of every row was
+last true, used to age the open cases.
+
+Two different questions are answered from this file, and keeping them apart is the point:
+
+- **How many came in during a period** — scoped by `opened_at`. This is the only figure the
+  chargeback rate is computed from.
+- **Where they stand with the bank right now** — a snapshot across every row, ignoring the
+  reporting period. A dispute opened before the reported week and still undecided is money at
+  risk *today*; scoping it to the week would report it as though it had resolved itself.
+
+| Field | Type | Notes |
+|---|---|---|
+| `chargeback_id` | string | Unique. |
+| `store_id` | string | |
+| `order_id` | string | The disputed order. |
+| `opened_at` | timestamp | When the dispute was raised. Decides which period it counts in. |
+| `resolved_at` | timestamp \| null | `null` while pending. Never `""`. |
+| `amount_usd` | number | The disputed amount. |
+| `fee_usd` | number | The processor's per-case fee. **Charged whatever the outcome and not refunded on a win**, which is why it is summed across every row rather than only the lost ones. Omitting it understates the cost by one fee per case. |
+| `reason` | string | `fraud_unauthorised`, `product_not_received`, `product_not_as_described`, `subscription_not_cancelled`, `duplicate_charge`, `credit_not_processed`, `unrecognised_descriptor`. |
+| `status` | string | `open`, `under_review`, `won`, `lost`, `accepted`. |
+| `network` | string | `visa`, `mastercard`, `amex`, `paypal`. |
+| `represented` | boolean | Whether evidence was submitted. `false` on an `accepted` case by definition. |
+
+### Status meanings
+
+| Status | Meaning |
+|---|---|
+| `open` | Received, response window still running. Counts as **pending**. |
+| `under_review` | Evidence submitted, awaiting the bank. Counts as **pending**. |
+| `won` | Funds retained. The fee is still gone. |
+| `lost` | Funds taken. |
+| `accepted` | Not contested — a deliberate choice to lose. Counted with `lost` in the money totals, and shown separately because it is a decision, not an outcome. |
+
+**Win rate is won ÷ decided**, where decided is `won + lost + accepted`. Pending cases are
+excluded; counting them would understate the rate for no reason other than time not having
+passed yet.
+
+### The rate
+
+**Chargeback rate is COUNT ÷ ORDERS**, not value ÷ revenue. That is the ratio card networks
+monitor and set thresholds on, so it is the one that determines whether a store is at risk of
+entering a monitoring programme. The value-based ratio is reported next to it because it is
+what the money actually costs, but it is not the number that triggers anything.
+
+This is why `revenue.json` carries `orders`. Without it there is no denominator and the rate
+cannot be computed at all.
+
+The thresholds live in `meta.json` under `targets.chargeback_rate` — `goal` is the level a
+healthy account sits at and `warning` is set where monitoring programmes typically begin.
+Changing either changes the status chip with no code change.

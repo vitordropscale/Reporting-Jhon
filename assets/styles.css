@@ -407,6 +407,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .status.unknown { background: var(--surface-sunk); }
 .status.unknown .status-dot { background: var(--ink-muted); }
 
+/* A tile is a column flexbox, so a chip inside one stretches to the full width
+   unless told not to. It should hug its own text. */
+.tile > .status { align-self: flex-start; }
+
 /* =============================================================================
    Tables — always scroll inside their own container
    ========================================================================== */

@@ -1,11 +1,11 @@
 {
-  "schema": "revenue/1",
+  "schema": "revenue/2",
   "rows": [
-    { "store_id": "lumvelle", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 74800 },
-    { "store_id": "lumvelle", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 78400 },
-    { "store_id": "koda", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 50300 },
-    { "store_id": "koda", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 52600 },
-    { "store_id": "elevare", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 39900 },
-    { "store_id": "elevare", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 41200 }
+    { "store_id": "lumvelle", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 74800, "orders": 1327 },
+    { "store_id": "lumvelle", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 78400, "orders": 1391 },
+    { "store_id": "elevare", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 39900, "orders": 712 },
+    { "store_id": "elevare", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 41200, "orders": 735 },
+    { "store_id": "koda", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 50300, "orders": 902 },
+    { "store_id": "koda", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 52600, "orders": 944 }
   ]
 }

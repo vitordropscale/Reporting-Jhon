@@ -5,11 +5,11 @@
    PHASE 2 CHANGES THIS FILE, AND NOTHING ELSE.
    ---------------------------------------------------------------------------
 
-   Today `loadData()` reads eight static JSON files out of ../data/. When the
+   Today `loadData()` reads nine static JSON files out of ../data/. When the
    real pull is built, there are exactly two ways forward and both stop here:
 
      A. A scheduled job (GitHub Action, cron, whatever) calls the Richpanel API,
-        the Commslayer API and Shopify, writes the same eight files, and commits
+        the Commslayer API and Shopify, writes the same nine files, and commits
         them. Then NOTHING in this repo changes — not even this file. The UI
         re-renders real numbers because the JSON changed underneath it.
 
@@ -17,7 +17,7 @@
         below changes: swap the paths for URLs, add auth headers, and keep
         normalize() returning the identical shape.
 
-   Every other module — metrics.js, charts.js, the four views, app.js —
+   Every other module — metrics.js, charts.js, the five views, app.js —
    receives the object returned by loadData() and never reaches past it. No
    fetch() outside this file. That is the whole architectural bet: the UI is
    coupled to a SHAPE, not to a source.
@@ -44,6 +44,7 @@ const SOURCES = {
   replacements: '../data/replacements.json',
   revenue: '../data/revenue.json',
   plans: '../data/action-plans.json',
+  chargebacks: '../data/chargebacks.json',
 };
 
 async function fetchJson(relativePath) {
@@ -73,7 +74,7 @@ async function fetchJson(relativePath) {
 }
 
 /**
- * Fold the eight payloads into the one object every other module consumes.
+ * Fold the nine payloads into the one object every other module consumes.
  *
  * This is deliberately thin. It unwraps the `rows` envelopes and camelCases the
  * two or three keys the UI reads directly, and it does not compute anything —
@@ -105,6 +106,9 @@ function normalize(raw) {
     revenue: raw.revenue.rows,
     /** Improvement work in flight, one row per plan. Store-scoped like everything else. */
     plans: raw.plans.rows,
+    /** One row per dispute. Status is a live state, not a period fact. */
+    chargebacks: raw.chargebacks.rows,
+    chargebackSnapshotAt: raw.chargebacks.snapshot_at,
   };
 }
 
@@ -176,7 +180,7 @@ let cached = null;
 export async function loadData() {
   if (cached) return cached;
 
-  const [stores, meta, tickets, queue, refunds, replacements, revenue, plans] = await Promise.all([
+  const [stores, meta, tickets, queue, refunds, replacements, revenue, plans, chargebacks] = await Promise.all([
     fetchJson(SOURCES.stores),
     fetchJson(SOURCES.meta),
     fetchJson(SOURCES.tickets),
@@ -185,9 +189,12 @@ export async function loadData() {
     fetchJson(SOURCES.replacements),
     fetchJson(SOURCES.revenue),
     fetchJson(SOURCES.plans),
+    fetchJson(SOURCES.chargebacks),
   ]);
 
-  const data = normalize({ stores, meta, tickets, queue, refunds, replacements, revenue, plans });
+  const data = normalize({
+    stores, meta, tickets, queue, refunds, replacements, revenue, plans, chargebacks,
+  });
   data.problems = checkInvariants(data);
   cached = data;
   return data;

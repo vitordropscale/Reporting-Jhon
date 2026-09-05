@@ -13,11 +13,13 @@ import { renderWeek } from './views/week.js';
 import { renderDay } from './views/day.js';
 import { renderSources } from './views/sources.js';
 import { renderPlans } from './views/plans.js';
+import { renderChargebacks } from './views/chargebacks.js';
 import { fmt } from './charts.js';
 
 const VIEWS = {
   week: { mount: 'view-week', render: renderWeek, rendered: false },
   day: { mount: 'view-day', render: renderDay, rendered: false },
+  chargebacks: { mount: 'view-chargebacks', render: renderChargebacks, rendered: false },
   plans: { mount: 'view-plans', render: renderPlans, rendered: false },
   sources: { mount: 'view-sources', render: renderSources, rendered: false },
 };
