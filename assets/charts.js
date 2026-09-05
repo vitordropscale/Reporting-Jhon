@@ -377,7 +377,14 @@ export function stackedDailyVolume(mount, days, stores, opts) {
   const y = (v) => m.top + plotH - (v / scale.max) * plotH;
 
   const slot = plotW / days.length;
-  const barW = Math.min(34, slot * 0.66);
+  const barW = Math.min(34, Math.max(2, slot * 0.66));
+
+  // A date label needs roughly 46px. Pick the smallest stride that keeps them
+  // from overlapping, then round it to a whole number of weeks where possible
+  // so the labels land on the same weekday and read as a regular cadence.
+  let dateStride = Math.max(1, Math.ceil(46 / slot));
+  if (dateStride > 4) dateStride = Math.ceil(dateStride / 7) * 7;
+  const showWeekdayInitials = slot >= 22;
 
   const root = svg('svg', {
     class: 'chart', width, height, viewBox: `0 0 ${width} ${height}`, role: 'img',
@@ -408,7 +415,7 @@ export function stackedDailyVolume(mount, days, stores, opts) {
       class: 'divider', x1: x, x2: x, y1: m.top, y2: m.top + plotH,
     }));
     const tag = svg('text', { class: 'tick', x: x + 5, y: m.top + 9, 'text-anchor': 'start' });
-    tag.textContent = 'reported week';
+    tag.textContent = 'reported period';
     root.appendChild(tag);
   }
 
@@ -438,14 +445,20 @@ export function stackedDailyVolume(mount, days, stores, opts) {
       acc += v;
     }
 
-    // x labels: weekday initial, with the date every other day to avoid crowding
-    const xl = svg('text', {
-      class: 'tick', x: cx, y: height - 14, 'text-anchor': 'middle',
-    });
-    xl.textContent = fmt.weekday(day.date).slice(0, 1);
-    root.appendChild(xl);
-    if (i % 2 === 0) {
-      const xd = svg('text', { class: 'tick', x: cx, y: height - 3, 'text-anchor': 'middle' });
+    // Label density is derived from the space available, not fixed. Over two
+    // weeks every other day fits; over ten weeks it would be an unreadable
+    // smear, so the stride grows and the weekday initials drop out entirely.
+    if (showWeekdayInitials) {
+      const xl = svg('text', {
+        class: 'tick', x: cx, y: height - 14, 'text-anchor': 'middle',
+      });
+      xl.textContent = fmt.weekday(day.date).slice(0, 1);
+      root.appendChild(xl);
+    }
+    if (i % dateStride === 0 || i === days.length - 1) {
+      const xd = svg('text', {
+        class: 'tick', x: cx, y: height - (showWeekdayInitials ? 3 : 8), 'text-anchor': 'middle',
+      });
       xd.textContent = fmt.date(day.date);
       root.appendChild(xd);
     }
@@ -535,8 +548,11 @@ export function frtLines(mount, days, stores, opts) {
     }
   }
 
+  // Same adaptive stride as the volume chart, so the two x-axes line up.
+  let stride = Math.max(1, Math.ceil(46 / slot));
+  if (stride > 4) stride = Math.ceil(stride / 7) * 7;
   days.forEach((day, i) => {
-    if (i % 2 !== 0) return;
+    if (i % stride !== 0 && i !== days.length - 1) return;
     const xd = svg('text', { class: 'tick', x: x(i), y: height - 8, 'text-anchor': 'middle' });
     xd.textContent = fmt.date(day.date);
     root.appendChild(xd);

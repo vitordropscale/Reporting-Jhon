@@ -1,94 +1,127 @@
 {
   "schema": "queue/1",
-  "snapshot_at": "2026-08-30T23:59:00-03:00",
+  "snapshot_at": "2026-09-05T23:59:00-03:00",
   "stores": [
     {
       "store_id": "lumvelle",
-      "backlog": 46,
+      "backlog": 44,
       "unassigned": 5,
-      "over_24h_unanswered": 8,
-      "answered_today": 43,
-      "aging": { "under_24h": 29, "h24_to_72h": 12, "over_72h": 5 },
-      "oldest_ticket": { "ticket_id": "rp-141088", "subject": "Chargeback threat - order never scanned by carrier", "created_at": "2026-08-24T09:12:00-03:00", "status": "pending", "assignee_id": "bruno.costa" }
-    },
-    {
-      "store_id": "koda",
-      "backlog": 38,
-      "unassigned": 7,
-      "over_24h_unanswered": 9,
-      "answered_today": 28,
-      "aging": { "under_24h": 21, "h24_to_72h": 11, "over_72h": 6 },
-      "oldest_ticket": { "ticket_id": "rp-139204", "subject": "Duplicate charge on replacement order", "created_at": "2026-08-23T16:41:00-03:00", "status": "open", "assignee_id": null }
+      "over_24h_unanswered": 7,
+      "answered_today": 38,
+      "aging": { "under_24h": 28, "h24_to_72h": 11, "over_72h": 5 },
+      "oldest_ticket": { "ticket_id": "rp-158102", "subject": "Chargeback threat - order never scanned by carrier", "created_at": "2026-08-30T09:12:00-03:00", "status": "pending", "assignee_id": "bruno.costa" }
     },
     {
       "store_id": "elevare",
-      "backlog": 42,
-      "unassigned": 9,
-      "over_24h_unanswered": 12,
-      "answered_today": 23,
-      "aging": { "under_24h": 19, "h24_to_72h": 14, "over_72h": 9 },
-      "oldest_ticket": { "ticket_id": "cs-118455", "subject": "Third package lost - customer demands full refund", "created_at": "2026-08-21T11:05:00-03:00", "status": "pending", "assignee_id": "camila.duarte" }
+      "backlog": 40,
+      "unassigned": 8,
+      "over_24h_unanswered": 11,
+      "answered_today": 22,
+      "aging": { "under_24h": 18, "h24_to_72h": 13, "over_72h": 9 },
+      "oldest_ticket": { "ticket_id": "cs-127455", "subject": "Third package lost - customer demands full refund", "created_at": "2026-08-27T11:05:00-03:00", "status": "pending", "assignee_id": "camila.duarte" }
+    },
+    {
+      "store_id": "koda",
+      "backlog": 36,
+      "unassigned": 6,
+      "over_24h_unanswered": 8,
+      "answered_today": 27,
+      "aging": { "under_24h": 21, "h24_to_72h": 10, "over_72h": 5 },
+      "oldest_ticket": { "ticket_id": "rp-157204", "subject": "Subscription charged again after cancellation", "created_at": "2026-08-29T16:41:00-03:00", "status": "open", "assignee_id": null }
     }
   ],
   "critical": [
-    { "ticket_id": "rp-141088", "store_id": "lumvelle", "subject": "Chargeback threat - order never scanned by carrier", "customer": "M. Whitfield", "order_id": "LUM-40912", "created_at": "2026-08-24T09:12:00-03:00", "first_human_reply_at": "2026-08-24T15:40:00-03:00", "status": "pending", "assignee_id": "bruno.costa", "reason": "waiting_over_3_days" },
-    { "ticket_id": "cs-118455", "store_id": "elevare", "subject": "Third package lost - customer demands full refund", "customer": "D. Okonkwo", "order_id": "ELV-22740", "created_at": "2026-08-21T11:05:00-03:00", "first_human_reply_at": "2026-08-21T19:22:00-03:00", "status": "pending", "assignee_id": "camila.duarte", "reason": "escalated" },
-    { "ticket_id": "rp-139204", "store_id": "koda", "subject": "Duplicate charge on replacement order", "customer": "S. Lindqvist", "order_id": "KOD-18355", "created_at": "2026-08-23T16:41:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
-    { "ticket_id": "cs-119021", "store_id": "elevare", "subject": "Wrong size shipped twice - refund requested", "customer": "A. Baptiste", "order_id": "ELV-31844", "created_at": "2026-08-28T08:30:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
-    { "ticket_id": "rp-141902", "store_id": "lumvelle", "subject": "Item arrived cracked - photos attached", "customer": "J. Moreau", "order_id": "LUM-41677", "created_at": "2026-08-27T14:18:00-03:00", "first_human_reply_at": "2026-08-28T10:02:00-03:00", "status": "pending", "assignee_id": "diego.alves", "reason": "refund_requested" },
-    { "ticket_id": "rp-140550", "store_id": "koda", "subject": "Reopened: tracking still not updating", "customer": "P. Nakamura", "order_id": "KOD-19002", "created_at": "2026-08-26T10:55:00-03:00", "first_human_reply_at": "2026-08-26T13:12:00-03:00", "status": "open", "assignee_id": "elena.souza", "reason": "reopened" },
-    { "ticket_id": "cs-119240", "store_id": "elevare", "subject": "Customer filed PayPal dispute before replying", "customer": "L. Fischer", "order_id": "ELV-32109", "created_at": "2026-08-27T20:44:00-03:00", "first_human_reply_at": "2026-08-28T09:15:00-03:00", "status": "pending", "assignee_id": "felipe.marques", "reason": "escalated" },
-    { "ticket_id": "rp-142310", "store_id": "lumvelle", "subject": "Refund promised last week, not processed", "customer": "R. Castellanos", "order_id": "LUM-41203", "created_at": "2026-08-26T09:03:00-03:00", "first_human_reply_at": "2026-08-26T11:47:00-03:00", "status": "pending", "assignee_id": "ana.ribeiro", "reason": "refund_requested" },
-    { "ticket_id": "rp-140988", "store_id": "koda", "subject": "Package delivered to wrong address", "customer": "T. Abioye", "order_id": "KOD-19488", "created_at": "2026-08-28T13:26:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
-    { "ticket_id": "cs-119388", "store_id": "elevare", "subject": "Second replacement also damaged", "customer": "H. Vasquez", "order_id": "ELV-30755", "created_at": "2026-08-25T15:10:00-03:00", "first_human_reply_at": "2026-08-26T08:55:00-03:00", "status": "pending", "assignee_id": "camila.duarte", "reason": "waiting_over_3_days" },
-    { "ticket_id": "rp-142455", "store_id": "lumvelle", "subject": "Asking for return label, no response from supplier", "customer": "K. Andersen", "order_id": "LUM-41930", "created_at": "2026-08-28T17:02:00-03:00", "first_human_reply_at": "2026-08-29T09:40:00-03:00", "status": "open", "assignee_id": "felipe.marques", "reason": "escalated" },
-    { "ticket_id": "rp-141377", "store_id": "koda", "subject": "Reopened twice - wants to speak to a manager", "customer": "B. Sorensen", "order_id": "KOD-19233", "created_at": "2026-08-27T11:33:00-03:00", "first_human_reply_at": "2026-08-27T14:20:00-03:00", "status": "pending", "assignee_id": "ana.ribeiro", "reason": "reopened" },
-    { "ticket_id": "cs-119510", "store_id": "elevare", "subject": "No tracking movement for 18 days", "customer": "N. Petrova", "order_id": "ELV-29901", "created_at": "2026-08-24T19:48:00-03:00", "first_human_reply_at": "2026-08-25T10:11:00-03:00", "status": "pending", "assignee_id": "diego.alves", "reason": "waiting_over_3_days" }
+    { "ticket_id": "rp-158102", "store_id": "lumvelle", "subject": "Chargeback threat - order never scanned by carrier", "customer": "M. Whitfield", "order_id": "LUM-40912", "created_at": "2026-08-30T09:12:00-03:00", "first_human_reply_at": "2026-08-30T15:40:00-03:00", "status": "pending", "assignee_id": "bruno.costa", "reason": "waiting_over_3_days" },
+    { "ticket_id": "cs-127455", "store_id": "elevare", "subject": "Third package lost - customer demands full refund", "customer": "D. Okonkwo", "order_id": "ELV-22740", "created_at": "2026-08-27T11:05:00-03:00", "first_human_reply_at": "2026-08-27T19:22:00-03:00", "status": "pending", "assignee_id": "camila.duarte", "reason": "escalated" },
+    { "ticket_id": "rp-157204", "store_id": "koda", "subject": "Subscription charged again after cancellation", "customer": "S. Lindqvist", "order_id": "KOD-18355", "created_at": "2026-08-29T16:41:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
+    { "ticket_id": "cs-128021", "store_id": "elevare", "subject": "Wrong size shipped twice - refund requested", "customer": "A. Baptiste", "order_id": "ELV-31844", "created_at": "2026-09-03T08:30:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
+    { "ticket_id": "rp-158902", "store_id": "lumvelle", "subject": "Item arrived cracked - photos attached", "customer": "J. Moreau", "order_id": "LUM-41677", "created_at": "2026-09-02T14:18:00-03:00", "first_human_reply_at": "2026-09-03T10:02:00-03:00", "status": "pending", "assignee_id": "diego.alves", "reason": "refund_requested" },
+    { "ticket_id": "rp-157550", "store_id": "koda", "subject": "Reopened: tracking still not updating", "customer": "P. Nakamura", "order_id": "KOD-19002", "created_at": "2026-09-01T10:55:00-03:00", "first_human_reply_at": "2026-09-01T13:12:00-03:00", "status": "open", "assignee_id": "elena.souza", "reason": "reopened" },
+    { "ticket_id": "cs-128240", "store_id": "elevare", "subject": "Customer filed PayPal dispute before replying", "customer": "L. Fischer", "order_id": "ELV-32109", "created_at": "2026-09-02T20:44:00-03:00", "first_human_reply_at": "2026-09-03T09:15:00-03:00", "status": "pending", "assignee_id": "felipe.marques", "reason": "escalated" },
+    { "ticket_id": "rp-159310", "store_id": "lumvelle", "subject": "Refund promised last week, not processed", "customer": "R. Castellanos", "order_id": "LUM-41203", "created_at": "2026-09-01T09:03:00-03:00", "first_human_reply_at": "2026-09-01T11:47:00-03:00", "status": "pending", "assignee_id": "ana.ribeiro", "reason": "refund_requested" },
+    { "ticket_id": "rp-157988", "store_id": "koda", "subject": "Missing 4 of 5 pairs in the multi-pack", "customer": "T. Abioye", "order_id": "KOD-19488", "created_at": "2026-09-03T13:26:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" },
+    { "ticket_id": "cs-128388", "store_id": "elevare", "subject": "Second replacement also damaged", "customer": "H. Vasquez", "order_id": "ELV-30755", "created_at": "2026-08-31T15:10:00-03:00", "first_human_reply_at": "2026-09-01T08:55:00-03:00", "status": "pending", "assignee_id": "camila.duarte", "reason": "waiting_over_3_days" },
+    { "ticket_id": "rp-159455", "store_id": "lumvelle", "subject": "Asking for return label, no response from supplier", "customer": "K. Andersen", "order_id": "LUM-41930", "created_at": "2026-09-03T17:02:00-03:00", "first_human_reply_at": "2026-09-04T09:40:00-03:00", "status": "open", "assignee_id": "felipe.marques", "reason": "escalated" },
+    { "ticket_id": "rp-158377", "store_id": "koda", "subject": "Did not know it was a subscription - wants refund", "customer": "B. Sorensen", "order_id": "KOD-19233", "created_at": "2026-09-02T11:33:00-03:00", "first_human_reply_at": "2026-09-02T14:20:00-03:00", "status": "pending", "assignee_id": "ana.ribeiro", "reason": "refund_requested" },
+    { "ticket_id": "cs-128510", "store_id": "elevare", "subject": "No tracking movement for 18 days", "customer": "N. Petrova", "order_id": "ELV-29901", "created_at": "2026-08-31T19:48:00-03:00", "first_human_reply_at": "2026-09-01T10:11:00-03:00", "status": "pending", "assignee_id": "diego.alves", "reason": "waiting_over_3_days" },
+    { "ticket_id": "rp-158640", "store_id": "koda", "subject": "Wrong colour delivered, second time on same order", "customer": "C. Mendes", "order_id": "KOD-19601", "created_at": "2026-09-04T10:15:00-03:00", "first_human_reply_at": null, "status": "open", "assignee_id": null, "reason": "no_reply_over_24h" }
   ],
   "agents": [
     {
       "agent_id": "ana.ribeiro",
       "agent_name": "Ana Ribeiro",
       "store_id": "lumvelle",
-      "answered": 13,
-      "closed": 12,
-      "reopened": 1,
+      "answered": 10,
+      "closed": 9,
+      "reopened": 0,
       "frt_hours": [
-          1.09, 1.38, 1.5, 2.38, 2.92, 3, 3.09, 3.6, 3.87, 4.04, 4.12, 5.37, 5.77
+          1.07, 1.45, 1.64, 2.05, 3.52, 3.82, 5.1, 5.12, 6.39, 13.63
         ]
     },
     {
       "agent_id": "bruno.costa",
       "agent_name": "Bruno Costa",
       "store_id": "lumvelle",
-      "answered": 9,
-      "closed": 8,
+      "answered": 8,
+      "closed": 7,
       "reopened": 0,
       "frt_hours": [
-          0.82, 2.26, 2.35, 4.02, 5.02, 5.98, 6.07, 7.68, 9.25
+          1.73, 3.26, 3.31, 3.38, 4.59, 4.81, 5.8, 6.34
         ]
     },
     {
       "agent_id": "diego.alves",
       "agent_name": "Diego Alves",
       "store_id": "lumvelle",
-      "answered": 8,
-      "closed": 7,
+      "answered": 12,
+      "closed": 11,
       "reopened": 0,
       "frt_hours": [
-          4.18, 5.12, 5.19, 6.79, 7.9, 9.18, 10.11, 107.28
+          3.39, 3.85, 3.93, 5.6, 6.08, 6.24, 6.57, 6.93, 7.27, 24.5, 29.12, 94.88
         ]
     },
     {
       "agent_id": "felipe.marques",
       "agent_name": "Felipe Marques",
       "store_id": "lumvelle",
-      "answered": 13,
-      "closed": 12,
+      "answered": 8,
+      "closed": 8,
       "reopened": 1,
       "frt_hours": [
-          3.61, 4.42, 5.79, 8.21, 10.11, 10.81, 11.26, 13.74, 24.5, 31.24, 45.47, 143.28,
-          168
+          2.6, 5.8, 8.05, 8.78, 11.67, 12.08, 24.5, 24.5
+        ]
+    },
+    {
+      "agent_id": "camila.duarte",
+      "agent_name": "Camila Duarte",
+      "store_id": "elevare",
+      "answered": 5,
+      "closed": 5,
+      "reopened": 0,
+      "frt_hours": [
+          1.46, 3.12, 5.92, 6.54, 34.18
+        ]
+    },
+    {
+      "agent_id": "diego.alves",
+      "agent_name": "Diego Alves",
+      "store_id": "elevare",
+      "answered": 12,
+      "closed": 11,
+      "reopened": 0,
+      "frt_hours": [
+          1.41, 2.33, 3.08, 3.72, 3.73, 5.96, 6.26, 6.62, 8.86, 8.94, 8.98, 17.32
+        ]
+    },
+    {
+      "agent_id": "felipe.marques",
+      "agent_name": "Felipe Marques",
+      "store_id": "elevare",
+      "answered": 5,
+      "closed": 5,
+      "reopened": 0,
+      "frt_hours": [
+          2.22, 9.2, 14.72, 29.89, 37.08
         ]
     },
     {
@@ -96,21 +129,21 @@
       "agent_name": "Ana Ribeiro",
       "store_id": "koda",
       "answered": 12,
-      "closed": 11,
-      "reopened": 1,
+      "closed": 12,
+      "reopened": 0,
       "frt_hours": [
-          3.44, 3.66, 3.96, 4.1, 6.09, 7.89, 8.73, 9.25, 9.8, 12.9, 13.87, 18.43
+          1.67, 2.89, 3.07, 3.08, 3.17, 3.69, 3.86, 3.87, 3.93, 4.27, 5.94, 9.01
         ]
     },
     {
       "agent_id": "camila.duarte",
       "agent_name": "Camila Duarte",
       "store_id": "koda",
-      "answered": 11,
+      "answered": 10,
       "closed": 10,
       "reopened": 1,
       "frt_hours": [
-          5.45, 10.52, 11.85, 12.67, 17.29, 17.47, 18.48, 19.55, 21.97, 24.5, 27.27
+          4.53, 6.6, 7.01, 7.24, 8.76, 9.56, 13.25, 24.5, 24.5, 84.81
         ]
     },
     {
@@ -118,43 +151,10 @@
       "agent_name": "Elena Souza",
       "store_id": "koda",
       "answered": 5,
-      "closed": 5,
-      "reopened": 0,
-      "frt_hours": [
-          4.24, 4.42, 5.27, 5.58, 6.99
-        ]
-    },
-    {
-      "agent_id": "camila.duarte",
-      "agent_name": "Camila Duarte",
-      "store_id": "elevare",
-      "answered": 4,
       "closed": 4,
       "reopened": 0,
       "frt_hours": [
-          7.32, 7.9, 22.3, 26.05
-        ]
-    },
-    {
-      "agent_id": "diego.alves",
-      "agent_name": "Diego Alves",
-      "store_id": "elevare",
-      "answered": 8,
-      "closed": 7,
-      "reopened": 0,
-      "frt_hours": [
-          3.16, 3.24, 6.13, 6.46, 6.84, 8.03, 10.19, 10.62
-        ]
-    },
-    {
-      "agent_id": "felipe.marques",
-      "agent_name": "Felipe Marques",
-      "store_id": "elevare",
-      "answered": 11,
-      "closed": 10,
-      "reopened": 1,
-      "frt_hours": [
-          2.78, 4.86, 5.38, 5.69, 5.81, 12.9, 16.79, 17.28, 24.5, 30.02, 61.78
+          4.36, 10.24, 10.71, 14.53, 19.66
         ]
     }
   ]

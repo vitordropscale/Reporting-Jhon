@@ -150,16 +150,30 @@ function checkInvariants(data) {
     }
   }
 
+  // Revenue rows may be daily (`date`) or span a range (`week_start`/`week_end`).
+  // What matters is only that the reported period is covered for every store —
+  // without it the refund rate and the chargeback rate have no denominator.
   for (const store of data.stores) {
-    const hasCurrent = data.revenue.some(
-      (r) => r.store_id === store.store_id && r.week_start === data.meta.period_start,
-    );
-    if (!hasCurrent) {
+    const covers = data.revenue.some((r) => {
+      if (r.store_id !== store.store_id) return false;
+      const start = r.date || r.week_start;
+      const end = r.date || r.week_end;
+      return start <= data.meta.period_end && end >= data.meta.period_start;
+    });
+    if (!covers) {
       problems.push(
-        `revenue: no row for ${store.store_id} in the current period — `
-        + 'its refund rate has no denominator and will render as "no data"',
+        `revenue: nothing covering the reported period for ${store.store_id} — `
+        + 'its refund rate and chargeback rate have no denominator and will render as "no data"',
       );
     }
+  }
+
+  const missingOrders = data.revenue.filter((r) => r.orders == null).length;
+  if (missingOrders) {
+    problems.push(
+      `revenue: ${missingOrders} row(s) have no "orders" — the chargeback rate is `
+      + 'disputes divided by orders, so it cannot be computed for those days',
+    );
   }
 
   if (problems.length) {

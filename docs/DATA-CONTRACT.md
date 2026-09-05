@@ -90,8 +90,8 @@ Metric ids currently consumed by the goals table: `frt_median_hours`,
 
 ## `tickets-weekly.json`
 
-The daily ticket facts. **One row per store per day**, 14 days (7 current + 7 previous) × 3
-stores = 42 rows. This is the source for every volume, FRT, resolution, and reopen number in
+The daily ticket facts. **One row per store per day**, covering the reported period and the
+comparison period before it. This is the source for every volume, FRT, resolution, and reopen number in
 the weekly view.
 
 | Field | Type | Notes |
@@ -211,12 +211,20 @@ It is never refunds ÷ tickets. That is why `revenue.json` exists.
 
 ## `revenue.json`
 
-Shopify facts per store per week: the **denominator of the refund rate** (revenue) and of the **chargeback rate** (orders).
+Shopify facts per store, **per day**: the **denominator of the refund rate** (revenue) and of the
+**chargeback rate** (orders).
+
+This file was weekly until the period became user-selectable. Weekly rows cannot give an exact
+denominator for a window that does not line up with whole weeks — the overlap has to be
+pro-rated, and the refund rate becomes an estimate. Daily rows are exact for any window, which
+is why the shape changed. `revenueForWindow` still reads the weekly shape, and reports
+`isExact: false` whenever anything had to be pro-rated.
 
 | Field | Type | Notes |
 |---|---|---|
 | `store_id` | string | |
-| `week_start` / `week_end` | date | Inclusive. Must line up with the period bounds in `meta.json` — the current-period row has `week_start === meta.period_start`. |
+| `date` | date | The day the figures belong to. Rows are DAILY as of schema `revenue/3`. |
+| `week_start` / `week_end` | date | Legacy weekly shape, still read. A row may carry either `date` or this pair; `revenueForWindow` handles both, so the file can move between shapes without touching a caller. |
 | `revenue_usd` | number | Net revenue for that store and week, **before** refunds are subtracted. Subtracting them first would make the refund rate meaningless. |
 | `orders` | integer | Order count for that store and week. The denominator of the **chargeback rate** — without it that rate cannot be computed at all. |
 

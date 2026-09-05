@@ -197,16 +197,29 @@ export function periods(meta, override) {
 export function revenueForWindow(revenueRows, window) {
   let total = 0;
   let orders = 0;
-  let exact = false;
+  // Exact means every overlapping row fell ENTIRELY inside the window, so
+  // nothing had to be pro-rated. Daily rows are always exact for any window;
+  // weekly rows are exact only when the window lines up with whole weeks.
+  let exact = true;
+
   for (const row of revenueRows) {
-    const shared = overlapDays(row.week_start, row.week_end, window.start, window.end);
+    // Rows may be daily (`date`) or span a range (`week_start`/`week_end`).
+    // Both shapes are read here so the file can move from one to the other
+    // without touching any caller.
+    const rowStart = row.date || row.week_start;
+    const rowEnd = row.date || row.week_end;
+
+    const shared = overlapDays(rowStart, rowEnd, window.start, window.end);
     if (shared <= 0) continue;
-    const weekDays = windowLength(row.week_start, row.week_end);
-    if (shared === weekDays && windowLength(window.start, window.end) === weekDays) exact = true;
-    const share = shared / weekDays;
+
+    const rowDays = windowLength(rowStart, rowEnd);
+    if (shared !== rowDays) exact = false;
+
+    const share = shared / rowDays;
     total += row.revenue_usd * share;
     orders += (row.orders || 0) * share;
   }
+
   return { total, orders, isExact: exact };
 }
 
