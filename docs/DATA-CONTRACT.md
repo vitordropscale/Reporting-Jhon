@@ -1,6 +1,6 @@
 # Data contract
 
-Everything the dashboard renders comes from the seven JSON files in `data/`. The UI never
+Everything the dashboard renders comes from the eight JSON files in `data/`. The UI never
 computes a number from anywhere else, and no module except `assets/data.js` reads these files.
 
 **Phase 2 replaces the *contents* of these files. It does not change their shape, and it does
@@ -239,3 +239,43 @@ in the job that writes the files.
 6. `revenue.json` has one row per store per period, for both periods.
 7. The weekly KPI tiles equal the aggregate of the daily arrays; the store table's
    "Total / weighted" row equals the same aggregate. Neither is stored anywhere.
+
+---
+
+## `action-plans.json`
+
+**One row per action plan** — the improvement work committed to for a store, and how each
+plan will be judged. This file is the whole content of the Action plans tab: adding a row,
+rewording a step, marking one done, assigning an owner or changing a priority all happen here,
+never in code.
+
+Unlike every other file, this one is **not** produced by the ingestion job. It is written by
+hand and it is not tied to a reporting period — a plan is open until it is closed.
+
+| Field | Type | Notes |
+|---|---|---|
+| `plan_id` | string | Unique, stable. Used as the key if a plan is ever linked to from elsewhere. |
+| `store_id` | string | The store the plan belongs to. Drives the store filter, same as everywhere else. |
+| `title` | string | Short name for the problem. |
+| `problem` | string | What the customer experiences, in plain language. |
+| `why_it_matters` | string \| null | Why this one earns attention over the others — cost, risk, or volume. Optional; omitted rows simply render without the block. |
+| `priority` | integer | `1` is highest. Plans render in this order. Ties are allowed but read badly. |
+| `status` | string | `not_started` \| `in_progress` \| `blocked` \| `done`. Anything else renders as an unknown chip rather than breaking. |
+| `owner` | string \| null | `null` renders as "No owner assigned" — deliberately visible rather than blank. |
+| `opened_at` | date | When the plan was recorded. |
+| `metric` | string \| null | How anyone will know it worked. A plan without one is a wish. |
+| `actions` | array | The steps. Order is the order shown. |
+
+### `actions[]`
+
+| Field | Type | Notes |
+|---|---|---|
+| `text` | string | One concrete step. |
+| `type` | string | Who has to move: `supplier`, `tech`, `comms`, `policy`, `internal`. Renders as a small tag; an unrecognised value renders with no tag. |
+| `done` | boolean | Real `true`/`false`. Drives the filled dot and the "N of M steps done" count in the header. The dots are display only — progress is recorded by editing this file, not by clicking. |
+
+**Edge cases**
+
+- A store with no rows renders an explicit "Nothing recorded for this selection", not an empty
+  page — so an empty tab is never mistaken for a broken one.
+- The Action plans tab ignores the period selector. Plans are not scoped to a reporting week.

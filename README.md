@@ -48,10 +48,11 @@ Then open **<http://localhost:8123/>** and press Ctrl+C to stop.
 |---|---|---|
 | **Weekly** | The client | Headline KPI tiles, daily volume by store, first-response trend, store comparison table, refunds, replacements, goals |
 | **Daily** | The support team | Queue right now, backlog aging, the critical queue, per-agent figures |
+| **Action plans** | Both | The improvement work committed to per store, with the metric each will be judged by |
 | **Data sources** | Both | Where each number comes from, what it means, and the three ways to feed this thing |
 
 The **store filter** in the sticky bar (All / Lumvelle / Elevare / Koda) re-computes every tile,
-table and chart in all three tabs. Nothing is precomputed per selection — selecting one store
+table and chart in all four tabs. Nothing is precomputed per selection — selecting one store
 re-runs the same aggregation functions over a narrower set of rows.
 
 The **theme** button cycles system → light → dark. The page renders correctly with no stored
@@ -61,7 +62,7 @@ preference; the remembered choice is a convenience only.
 
 ## Changing the fake data
 
-All seven files live in `data/`. Edit them and reload — there is nothing to rebuild.
+All eight files live in `data/`. Edit them and reload — there is nothing to rebuild.
 
 The dashboard is genuinely data-driven, so this works the way you would hope:
 
@@ -93,7 +94,7 @@ The architectural bet of this repo is that **swapping fake data for real data do
 the UI.**
 
 `assets/data.js` is the only module that fetches anything. Every other module — `metrics.js`,
-`charts.js`, the three views, `app.js` — receives the object `loadData()` returns and never
+`charts.js`, the four views, `app.js` — receives the object `loadData()` returns and never
 reaches past it. The UI is coupled to a *shape*, not to a source.
 
 So Phase 2 has two possible forms, and both stop at that file:
@@ -147,7 +148,7 @@ Two details that matter for the project subpath:
 ## Layout
 
 ```
-index.html               shell: top bar, tabs, store filter, three view containers
+index.html               shell: top bar, tabs, store + period filters, four view containers
 serve.ps1                local preview server (development only, not part of the site)
 .nojekyll                stops Jekyll processing on Pages
 assets/
@@ -158,6 +159,7 @@ assets/
   charts.js              inline-SVG chart builders, shared tooltip, formatters, tiles
   views/week.js          weekly client view
   views/day.js           daily internal view
+  views/plans.js         action plans per store
   views/sources.js       data sources and definitions
 data/
   stores.json            store registry: id, name, helpdesk, colour slot
@@ -167,6 +169,7 @@ data/
   refunds.json           one row per refund
   replacements.json      one row per replacement
   revenue.json           per store per week, for the refund-rate denominator
+  action-plans.json      one row per action plan (hand-written, not from the job)
 docs/
   DATA-CONTRACT.md       the JSON schemas, field by field, with units and edge cases
   API-NOTES.md           what we know about the two helpdesk APIs, and what to confirm

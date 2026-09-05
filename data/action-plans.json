@@ -1,0 +1,102 @@
+{
+  "schema": "action-plans/1",
+  "rows": [
+    {
+      "plan_id": "koda-subscriptions",
+      "store_id": "koda",
+      "title": "Unclear subscription enrolment",
+      "problem": "Customers do not realise they are enrolling in a subscription, and are surprised by later charges and orders.",
+      "why_it_matters": "This is the only item on the list that costs money rather than support time. Recurring charges a customer does not remember authorising are the single biggest driver of chargebacks, and a high dispute rate puts the payment processor at risk. Unclear enrolment of this kind is also a specific enforcement target for the FTC's negative-option rules in the US.",
+      "priority": 1,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Chargeback rate, and cancellations at the second charge",
+      "actions": [
+        { "text": "Audit the checkout: is the subscription pre-selected, and are the amount and the frequency shown next to the buy button?", "type": "tech", "done": false },
+        { "text": "Post-purchase email in plain language: this is a subscription, the next charge is on <date>, cancel here.", "type": "comms", "done": false },
+        { "text": "Reminder email a few days before every charge.", "type": "comms", "done": false },
+        { "text": "Self-serve cancellation in the customer portal, without contacting an agent.", "type": "tech", "done": false },
+        { "text": "Refund without argument when a customer says they did not know. Cheaper than a chargeback.", "type": "policy", "done": false }
+      ]
+    },
+    {
+      "plan_id": "koda-delivery-delays",
+      "store_id": "koda",
+      "title": "Delivery delays",
+      "problem": "Customers report long waits and excessive delays, generating a high volume of support contacts.",
+      "why_it_matters": "The largest single source of ticket volume. Contact volume here falls by telling the customer before they ask, not by shipping faster.",
+      "priority": 2,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Where-is-my-order tickets as a share of orders, and real transit time per supplier",
+      "actions": [
+        { "text": "Proactive email when tracking has not moved for X days. This is what removes the most volume.", "type": "tech", "done": false },
+        { "text": "Take the delay data to the supplier and agree on a concrete improvement.", "type": "supplier", "done": false }
+      ]
+    },
+    {
+      "plan_id": "koda-missing-items",
+      "store_id": "koda",
+      "title": "Missing items in multi-packs",
+      "problem": "A customer buys a pack of several units and receives one. A 5-pack of socks arrives as a single pair. Happening across different products.",
+      "why_it_matters": "Every case is a refund or a reshipment, so it costs margin on top of the support time.",
+      "priority": 3,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Missing-item tickets per 1,000 orders, by product",
+      "actions": [
+        { "text": "Pull the affected orders and list which products and pack sizes are involved — the supplier conversation needs this to be specific.", "type": "internal", "done": false },
+        { "text": "Work with logistics to establish why multi-packs ship short, and agree how it stops happening.", "type": "supplier", "done": false }
+      ]
+    },
+    {
+      "plan_id": "koda-wrong-size",
+      "store_id": "koda",
+      "title": "Wrong size shipped",
+      "problem": "The customer orders one size and receives another — an M arriving as an XL, for example. Happening across different products.",
+      "why_it_matters": "In dropshipping the return shipping usually costs more than the item, so almost every case ends as a refund or a free reshipment.",
+      "priority": 4,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Wrong-size tickets per 1,000 units, by product",
+      "actions": [
+        { "text": "Check the size conversion table between the supplier's sizing and the sizing sold on the store.", "type": "internal", "done": false },
+        { "text": "Talk to the supplier about why it is happening and how it stops.", "type": "supplier", "done": false }
+      ]
+    },
+    {
+      "plan_id": "koda-wrong-colour",
+      "store_id": "koda",
+      "title": "Wrong colour shipped",
+      "problem": "Customers receive the product in a colour other than the one they ordered.",
+      "why_it_matters": "Same cost shape as the wrong-size cases, and it may share the same root cause in how variants map to supplier items.",
+      "priority": 5,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Wrong-colour tickets per 1,000 units",
+      "actions": [
+        { "text": "Talk to the supplier about why it is happening and how it stops.", "type": "supplier", "done": false }
+      ]
+    },
+    {
+      "plan_id": "koda-address-changes",
+      "store_id": "koda",
+      "title": "Address changes arriving too late",
+      "problem": "The customer asks to change the delivery address, but the order has already been processed or shipped to the previous one.",
+      "why_it_matters": "A parcel sent to the wrong address is usually a total loss, not a delay.",
+      "priority": 6,
+      "status": "not_started",
+      "owner": null,
+      "opened_at": "2026-09-05",
+      "metric": "Address-change requests, and parcels returned as undeliverable",
+      "actions": [
+        { "text": "Add address validation at checkout — an app that checks the address as the customer types it and warns when it looks wrong, so fewer changes are needed at all.", "type": "tech", "done": false }
+      ]
+    }
+  ]
+}
