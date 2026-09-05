@@ -1,0 +1,11 @@
+{
+  "schema": "revenue/1",
+  "rows": [
+    { "store_id": "lumvelle", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 74800 },
+    { "store_id": "lumvelle", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 78400 },
+    { "store_id": "koda", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 50300 },
+    { "store_id": "koda", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 52600 },
+    { "store_id": "elevare", "week_start": "2026-08-17", "week_end": "2026-08-23", "revenue_usd": 39900 },
+    { "store_id": "elevare", "week_start": "2026-08-24", "week_end": "2026-08-30", "revenue_usd": 41200 }
+  ]
+}

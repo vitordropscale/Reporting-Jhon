@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CS Reporting — Lumvelle, Elevare, Koda</title>
+<meta name="description" content="Weekly customer support reporting across three Shopify stores.">
+
+<!-- The only external request this site makes. Each family has a real fallback
+     stack in styles.css, so the page is fully legible if fonts.googleapis.com
+     is blocked or slow. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<!-- Relative, no leading slash: this is what makes the site work from a
+     GitHub Pages project subpath as well as from a server root. -->
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">CS Reporting</span>
+      <span class="sub">Lumvelle · Elevare · Koda</span>
+    </div>
+    <div class="topbar-meta">
+      <dl>
+        <div>
+          <dt>Period</dt>
+          <dd class="num" id="meta-period">—</dd>
+        </div>
+        <div>
+          <dt>Generated</dt>
+          <dd class="num" id="meta-generated">—</dd>
+        </div>
+        <div>
+          <dt>Timezone</dt>
+          <dd id="meta-tz">—</dd>
+        </div>
+      </dl>
+      <button type="button" class="theme-toggle" id="theme-toggle">Theme: system</button>
+    </div>
+  </div>
+</header>
+
+<div class="stickybar">
+  <div class="stickybar-inner">
+    <div class="tabs" role="tablist" aria-label="Dashboard views">
+      <button type="button" class="tab" role="tab" data-tab="week"
+              aria-selected="true" aria-controls="view-week">Weekly</button>
+      <button type="button" class="tab" role="tab" data-tab="day"
+              aria-selected="false" aria-controls="view-day">Daily</button>
+      <button type="button" class="tab" role="tab" data-tab="sources"
+              aria-selected="false" aria-controls="view-sources">Data sources</button>
+    </div>
+    <div class="filter">
+      <span class="filter-label" id="filter-label">Store</span>
+      <div class="filter-group" id="store-filter" role="group" aria-labelledby="filter-label"></div>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+  <p class="state" id="app-state">Loading…</p>
+
+  <div id="main" hidden>
+    <p class="section-note" id="contract-warning" hidden
+       style="color:var(--critical);margin-top:12px"></p>
+
+    <div id="view-week" role="tabpanel" aria-labelledby="tab-week"></div>
+    <div id="view-day" role="tabpanel" aria-labelledby="tab-day" hidden></div>
+    <div id="view-sources" role="tabpanel" aria-labelledby="tab-sources" hidden></div>
+  </div>
+</main>
+
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "schema": "stores/1",
+  "stores": [
+    { "store_id": "lumvelle", "name": "Lumvelle", "helpdesk": "richpanel", "color_slot": 1 },
+    { "store_id": "elevare", "name": "Elevare", "helpdesk": "commslayer", "color_slot": 2 },
+    { "store_id": "koda", "name": "Koda", "helpdesk": "richpanel", "color_slot": 3 }
+  ]
+}

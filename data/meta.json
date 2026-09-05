@@ -1,0 +1,18 @@
+{
+  "schema": "meta/1",
+  "generated_at": "2026-08-31T06:15:00-03:00",
+  "reporting_timezone": "America/Sao_Paulo",
+  "period_start": "2026-08-24",
+  "period_end": "2026-08-30",
+  "previous_period_start": "2026-08-17",
+  "previous_period_end": "2026-08-23",
+  "targets": {
+    "frt_median_hours":        { "label": "First response time (median)",  "unit": "hours",   "goal": 6,   "warning": 9,   "direction": "lower_is_better" },
+    "pct_answered_under_24h":  { "label": "Answered under 24h",            "unit": "percent", "goal": 90,  "warning": 82,  "direction": "higher_is_better" },
+    "resolution_median_hours": { "label": "Resolution time (median)",      "unit": "hours",   "goal": 22,  "warning": 36,  "direction": "lower_is_better" },
+    "backlog":                 { "label": "Backlog at period end",         "unit": "tickets", "goal": 110, "warning": 160, "direction": "lower_is_better" },
+    "over_24h_unanswered":     { "label": "Open over 24h with no reply",   "unit": "tickets", "goal": 12,  "warning": 25,  "direction": "lower_is_better" },
+    "reopen_rate":             { "label": "Reopen rate",                   "unit": "percent", "goal": 5,   "warning": 7,   "direction": "lower_is_better" },
+    "refund_rate":             { "label": "Refund rate",                   "unit": "percent", "goal": 2.5, "warning": 3.2, "direction": "lower_is_better" }
+  }
+}
