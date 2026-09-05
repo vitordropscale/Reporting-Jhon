@@ -28,7 +28,7 @@
     <div class="topbar-meta">
       <dl>
         <div>
-          <dt>Period</dt>
+          <dt>Data set</dt>
           <dd class="num" id="meta-period">—</dd>
         </div>
         <div>
@@ -55,6 +55,17 @@
       <button type="button" class="tab" role="tab" data-tab="sources"
               aria-selected="false" aria-controls="view-sources">Data sources</button>
     </div>
+    <div class="filter">
+      <span class="filter-label" id="period-label">Period</span>
+      <div class="period-group" role="group" aria-labelledby="period-label">
+        <input type="date" id="period-start" class="date-input" aria-label="Period start">
+        <span class="period-dash">–</span>
+        <input type="date" id="period-end" class="date-input" aria-label="Period end">
+        <button type="button" class="period-reset" id="period-reset"
+                title="Back to the period in meta.json">Reset</button>
+      </div>
+    </div>
+
     <div class="filter">
       <span class="filter-label" id="filter-label">Store</span>
       <div class="filter-group" id="store-filter" role="group" aria-labelledby="filter-label"></div>

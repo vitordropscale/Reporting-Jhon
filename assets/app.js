@@ -25,6 +25,11 @@ const state = {
   /** null means "All stores". Otherwise an array of store_ids. */
   storeIds: null,
   data: null,
+  /**
+   * null means "use the period in meta.json". Otherwise { start, end } and the
+   * comparison window is derived as the equal-length window before it.
+   */
+  period: null,
   /** Container width the current views were drawn at. */
   renderedWidth: null,
 };
@@ -55,7 +60,7 @@ function renderActive() {
   }
 
   if (!view.rendered) {
-    view.render(mount, state.data, state.storeIds);
+    view.render(mount, state.data, state.storeIds, state.period);
     view.rendered = true;
     // Remember the width the charts were actually drawn at. The resize observer
     // compares against THIS, not against whatever the DOM reports when the
@@ -150,6 +155,81 @@ function buildFilter(data) {
 }
 
 /* =============================================================================
+   Period selector
+   ========================================================================== */
+
+/**
+ * Two date inputs bounded by the data that actually exists.
+ *
+ * The bounds matter: without them it is possible to pick March, get a page of
+ * dashes, and have no way to tell whether the dashboard is broken or the period
+ * is simply empty. Clamping to the loaded range makes an empty result
+ * impossible to reach by accident.
+ *
+ * The default comes from meta.json and Reset returns to it, so the ingestion
+ * job stays the source of truth for "the reported week" — the picker is a way
+ * to look around, not a way to redefine the report.
+ */
+function wirePeriod(data) {
+  const startInput = document.getElementById('period-start');
+  const endInput = document.getElementById('period-end');
+  const reset = document.getElementById('period-reset');
+
+  const dates = data.ticketRows.map((r) => r.date).sort();
+  const min = dates[0];
+  const max = dates[dates.length - 1];
+
+  for (const input of [startInput, endInput]) {
+    input.min = min;
+    input.max = max;
+  }
+
+  const defaults = { start: data.meta.period_start, end: data.meta.period_end };
+
+  const isDefault = () => !state.period
+    || (state.period.start === defaults.start && state.period.end === defaults.end);
+
+  const paint = () => {
+    const active = state.period || defaults;
+    startInput.value = active.start;
+    endInput.value = active.end;
+    reset.hidden = isDefault();
+  };
+
+  const apply = (changed) => {
+    let start = startInput.value || defaults.start;
+    let end = endInput.value || defaults.end;
+
+    // Dragging one bound past the other is a slip, not an instruction. Push the
+    // other bound along instead of rejecting the input or silently swapping,
+    // which would move a date the user did not touch.
+    if (start > end) {
+      if (changed === 'start') end = start;
+      else start = end;
+    }
+
+    if (start < min) start = min;
+    if (end > max) end = max;
+
+    state.period = (start === defaults.start && end === defaults.end) ? null : { start, end };
+    paint();
+    invalidate();
+    renderActive();
+  };
+
+  startInput.addEventListener('change', () => apply('start'));
+  endInput.addEventListener('change', () => apply('end'));
+  reset.addEventListener('click', () => {
+    state.period = null;
+    paint();
+    invalidate();
+    renderActive();
+  });
+
+  paint();
+}
+
+/* =============================================================================
    Theme
    ========================================================================== */
 
@@ -192,8 +272,12 @@ function wireTheme() {
    ========================================================================== */
 
 function fillHeader(data) {
-  document.getElementById('meta-period').textContent = `${fmt.dateFull(data.meta.period_start)} – `
-    + `${fmt.dateFull(data.meta.period_end)}`;
+  // The header shows the full span the data covers — which is also what bounds
+  // the period picker. The SELECTED period lives in the picker itself, so the
+  // two never display the same thing and cannot contradict each other.
+  const dates = data.ticketRows.map((r) => r.date).sort();
+  document.getElementById('meta-period').textContent = `${fmt.dateFull(dates[0])} – `
+    + `${fmt.dateFull(dates[dates.length - 1])}`;
   document.getElementById('meta-generated').textContent = fmt.timestamp(data.meta.generated_at);
   document.getElementById('meta-tz').textContent = data.meta.reporting_timezone;
 }
@@ -257,6 +341,7 @@ async function boot() {
 
     fillHeader(data);
     buildFilter(data);
+    wirePeriod(data);
     restoreTab();
     wireTabs();
     wireResize();

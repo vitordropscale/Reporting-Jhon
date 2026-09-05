@@ -86,7 +86,7 @@ const REASON_STATUS = {
    Render
    ========================================================================== */
 
-export function renderDay(mount, data, storeIds) {
+export function renderDay(mount, data, storeIds, period) {
   mount.textContent = '';
 
   const scopedStores = storeIds

@@ -77,7 +77,7 @@ function cell(row, content, numeric) {
    Render
    ========================================================================== */
 
-export function renderWeek(mount, data, storeIds) {
+export function renderWeek(mount, data, storeIds, period) {
   mount.textContent = '';
 
   const scopedStores = storeIds
@@ -86,18 +86,23 @@ export function renderWeek(mount, data, storeIds) {
   const colorFor = (id) => data.storeColor(id);
   const storeName = (id) => data.storeName(id);
 
-  const cmp = M.computeComparison(data, storeIds);
+  const cmp = M.computeComparison(data, storeIds, period);
+  const activeWindow = M.periods(data.meta, period).current;
   const cur = cmp.current;
   const prev = cmp.previous;
   const d = cmp.deltas;
+
+  // Same rule the deltas from computeComparison already follow: when the
+  // comparison window holds no data, a previous figure is unknown, not zero.
+  const was = (value) => (prev.hasData ? value : null);
 
   /* --- KPI tile strip ----------------------------------------------------- */
 
   const kpis = section(
     'Headline',
-    `${fmt.dateFull(data.meta.period_start)} – ${fmt.dateFull(data.meta.period_end)}, `
-    + `compared with ${fmt.date(data.meta.previous_period_start)} – `
-    + `${fmt.date(data.meta.previous_period_end)}`,
+    `${fmt.dateFull(cur.window.start)} – ${fmt.dateFull(cur.window.end)}`
+    + ` (${M.windowLength(cur.window.start, cur.window.end)} days), compared with `
+    + `${fmt.date(prev.window.start)} – ${fmt.date(prev.window.end)}`,
   );
   const strip = el('div', 'grid tiles');
 
@@ -152,10 +157,16 @@ export function renderWeek(mount, data, storeIds) {
     label: 'Refund rate',
     value: fmt.dec(cur.refunds.rate, 2),
     unit: '%',
-    sub: `${fmt.usd(cur.refunds.totalUsd)} refunded on ${fmt.usd(cur.refunds.revenueUsd)} revenue`,
+    // Revenue is stored per week. For a window that is not exactly one of those
+    // weeks the denominator is pro-rated, so the figure is labelled an estimate
+    // rather than quietly presented as measured.
+    sub: `${fmt.usd(cur.refunds.totalUsd)} refunded on ${fmt.usd(cur.refunds.revenueUsd)} revenue`
+      + (cur.refunds.revenueIsExact ? '' : ' (revenue pro-rated — estimate)'),
     delta: d.refund_rate,
     formatPrevious: (v) => fmt.pct(v, 2),
-    help: 'Refunded USD divided by store revenue for the same period — money over money.',
+    help: 'Refunded USD divided by store revenue for the same period — money over money.'
+      + (cur.refunds.revenueIsExact ? '' : ' Revenue is stored weekly; this window spans '
+        + 'partial weeks, so the denominator is pro-rated by day.'),
   }));
 
   kpis.appendChild(strip);
@@ -163,11 +174,12 @@ export function renderWeek(mount, data, storeIds) {
 
   /* --- daily volume ------------------------------------------------------- */
 
-  const days = M.dailySeries(data, storeIds);
+  const days = M.dailySeries(data, storeIds, period);
 
   const volume = section(
     'Daily volume by store',
-    '14 days. The dashed line marks the start of the reported week.',
+    `Every day in the data set. The dashed line marks the start of the reported period `
+    + `(${fmt.date(activeWindow.start)}).`,
   );
   const volCard = card();
   if (scopedStores.length > 1) {
@@ -197,7 +209,7 @@ export function renderWeek(mount, data, storeIds) {
 
   /* --- store comparison table --------------------------------------------- */
 
-  const st = M.storeTable(data, storeIds);
+  const st = M.storeTable(data, storeIds, period);
   const cmpSection = section(
     'Store comparison',
     'Counts sum. Medians and percentages are recomputed over the pooled tickets, '
@@ -259,7 +271,7 @@ export function renderWeek(mount, data, storeIds) {
     value: fmt.int(cur.refunds.count),
     unit: cur.refunds.count === 1 ? 'refund' : 'refunds',
     sub: `${fmt.usdExact(cur.refunds.totalUsd)} refunded in total`,
-    delta: M.delta(cur.refunds.count, prev.refunds.count, 'refund_total_usd'),
+    delta: M.delta(cur.refunds.count, was(prev.refunds.count), 'refund_total_usd'),
   }));
 
   refTiles.appendChild(tile({
@@ -288,7 +300,7 @@ export function renderWeek(mount, data, storeIds) {
     value: fmt.usd(avgRefund),
     unit: 'USD',
     sub: 'Across full and partial refunds',
-    delta: M.delta(avgRefund, prevAvg, 'refund_total_usd'),
+    delta: M.delta(avgRefund, was(prevAvg), 'refund_total_usd'),
     formatPrevious: fmt.usd,
   }));
 
@@ -355,7 +367,7 @@ export function renderWeek(mount, data, storeIds) {
     value: fmt.int(cur.replacements.count),
     unit: cur.replacements.count === 1 ? 'order' : 'orders',
     sub: `${fmt.usd(cur.replacements.totalCostUsd)} in total cost`,
-    delta: M.delta(cur.replacements.count, prev.replacements.count, 'replacement_cost_usd'),
+    delta: M.delta(cur.replacements.count, was(prev.replacements.count), 'replacement_cost_usd'),
   }));
 
   repTiles.appendChild(tile({
@@ -387,7 +399,7 @@ export function renderWeek(mount, data, storeIds) {
     value: fmt.usd(avgRep),
     unit: 'USD',
     sub: 'Goods and shipping per replacement',
-    delta: M.delta(avgRep, prevAvgRep, 'replacement_cost_usd'),
+    delta: M.delta(avgRep, was(prevAvgRep), 'replacement_cost_usd'),
     formatPrevious: fmt.usd,
   }));
 
@@ -408,7 +420,7 @@ export function renderWeek(mount, data, storeIds) {
 
   /* --- goals -------------------------------------------------------------- */
 
-  const goals = M.goalsTable(data, storeIds);
+  const goals = M.goalsTable(data, storeIds, period);
   const goalSection = section(
     'Goals',
     'Targets live in data/meta.json. Changing one changes this table without a code change.',

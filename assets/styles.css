@@ -274,6 +274,49 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .chip-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 
+/* period selector */
+.period-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+}
+.date-input {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 6px;
+  /* The native picker icon is drawn by the browser in its own colour; invert it
+     in dark mode so it does not sit as a black glyph on a dark field. */
+  color-scheme: inherit;
+}
+.date-input:hover { border-color: var(--border-strong); }
+.period-dash { color: var(--ink-muted); font-size: 12px; }
+.period-reset {
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.period-reset:hover { color: var(--ink); background: var(--surface); }
+.period-reset[hidden] { display: none !important; }
+
+/* flags a period that is not the one meta.json ships with */
+.period-custom {
+  font-size: 11px;
+  color: var(--warning);
+  font-weight: 500;
+}
+
 /* =============================================================================
    Cards, sections, tiles
    ========================================================================== */

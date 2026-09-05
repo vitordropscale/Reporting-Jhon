@@ -90,6 +90,52 @@ export function hoursBetween(fromTs, toTs) {
   return (to - from) / 3600000;
 }
 
+/* -----------------------------------------------------------------------------
+   Calendar arithmetic on ISO date strings.
+
+   All of it goes through Date.UTC and reads back UTC fields. Using local-time
+   Date methods here would shift a day for viewers west of Greenwich and move
+   tickets between periods depending on who is looking.
+   -------------------------------------------------------------------------- */
+
+function toUTC(isoDate) {
+  const [y, m, d] = isoDate.slice(0, 10).split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+const DAY_MS = 86400000;
+
+/** Shift an ISO date by a whole number of days. */
+export function shiftDate(isoDate, days) {
+  return new Date(toUTC(isoDate) + days * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** Inclusive length of a window, in days. `a` to `a` is 1. */
+export function windowLength(start, end) {
+  return Math.round((toUTC(end) - toUTC(start)) / DAY_MS) + 1;
+}
+
+/** Number of days two inclusive date windows share. Zero when they miss. */
+export function overlapDays(aStart, aEnd, bStart, bEnd) {
+  const start = Math.max(toUTC(aStart), toUTC(bStart));
+  const end = Math.min(toUTC(aEnd), toUTC(bEnd));
+  if (end < start) return 0;
+  return Math.round((end - start) / DAY_MS) + 1;
+}
+
+/**
+ * The comparison window for an arbitrary period: the same number of days,
+ * immediately before it. A 7-day week compares against the 7 days before it;
+ * a 3-day range compares against the 3 days before it.
+ */
+export function derivePrevious(window) {
+  const length = windowLength(window.start, window.end);
+  return {
+    start: shiftDate(window.start, -length),
+    end: shiftDate(window.start, -1),
+  };
+}
+
 /* =============================================================================
    Scoping — the store filter and the period windows
    ========================================================================== */
@@ -111,12 +157,50 @@ export function byEventPeriod(rows, dateField, start, end) {
   return rows.filter((r) => inPeriod(dayOf(r[dateField]), start, end));
 }
 
-/** The current and previous windows, straight from meta.json. */
-export function periods(meta) {
+/**
+ * The current and previous windows.
+ *
+ * With no override this is exactly what meta.json says — including its explicit
+ * previous period, which the ingestion job may deliberately set to something
+ * other than "the seven days before" (a like-for-like week last year, say).
+ *
+ * With an override — the user picking dates in the UI — the comparison window
+ * is derived as the equal-length window immediately before, because meta.json's
+ * stored previous period no longer relates to what is being asked for.
+ */
+export function periods(meta, override) {
+  if (override && override.start && override.end) {
+    return { current: { ...override }, previous: derivePrevious(override) };
+  }
   return {
     current: { start: meta.period_start, end: meta.period_end },
     previous: { start: meta.previous_period_start, end: meta.previous_period_end },
   };
+}
+
+/**
+ * Revenue for an arbitrary window — the denominator of the refund rate.
+ *
+ * revenue.json is weekly, so a window that is not exactly one of those weeks
+ * has no row to match. Rather than reporting no refund rate at all, each
+ * overlapping week contributes the share of its revenue that falls inside the
+ * window, assuming revenue is spread evenly across the week's days.
+ *
+ * When the window IS exactly a stored week the share is 1 and the figure is
+ * exact, so the default period is unaffected by this. Anything else is an
+ * estimate, and `isExact` says which the caller is looking at.
+ */
+export function revenueForWindow(revenueRows, window) {
+  let total = 0;
+  let exact = false;
+  for (const row of revenueRows) {
+    const shared = overlapDays(row.week_start, row.week_end, window.start, window.end);
+    if (shared <= 0) continue;
+    const weekDays = windowLength(row.week_start, row.week_end);
+    if (shared === weekDays && windowLength(window.start, window.end) === weekDays) exact = true;
+    total += row.revenue_usd * (shared / weekDays);
+  }
+  return { total, isExact: exact };
 }
 
 /** Pool every per-ticket value out of a set of daily rows. */
@@ -243,9 +327,12 @@ export function revenueUsd(revenueRows) {
 /**
  * Total refunded USD ÷ store revenue in the same period. Money over money.
  * Not refunds ÷ tickets. Always displayed next to its absolute USD figure.
+ *
+ * Takes the revenue TOTAL rather than the rows, because for an arbitrary window
+ * that total comes from revenueForWindow() and may be pro-rated across weeks.
  */
-export function refundRate(refundRows, revenueRows) {
-  return pct(refundTotalUsd(refundRows), revenueUsd(revenueRows));
+export function refundRate(refundRows, revenueTotalUsd) {
+  return pct(refundTotalUsd(refundRows), revenueTotalUsd);
 }
 
 export function partialRefundCount(refundRows) {
@@ -386,13 +473,21 @@ export function computePeriod(data, storeIds, window) {
   const replacements = byEventPeriod(
     byStores(data.replacements, storeIds), 'created_at', window.start, window.end,
   );
-  const revenue = byStores(data.revenue, storeIds).filter((r) => r.week_start === window.start);
+  const revenue = revenueForWindow(byStores(data.revenue, storeIds), window);
 
   const answered = ticketsAnswered(daily);
   const under24 = answeredUnder24hCount(daily);
 
   return {
     window,
+    /**
+     * Whether the window contains any daily rows at all.
+     *
+     * "No data for this window" and "zero tickets in this window" are different
+     * claims, and summing an empty set produces 0 for both. Callers use this to
+     * avoid reporting a confident zero for a period the data set never covered.
+     */
+    hasData: daily.length > 0,
     answered,
     created: ticketsCreated(daily),
     closed: ticketsClosed(daily),
@@ -405,8 +500,10 @@ export function computePeriod(data, storeIds, window) {
     refunds: {
       count: refundCount(refunds),
       totalUsd: refundTotalUsd(refunds),
-      revenueUsd: revenueUsd(revenue),
-      rate: refundRate(refunds, revenue),
+      revenueUsd: revenue.total,
+      /** false when revenue had to be pro-rated across partial weeks. */
+      revenueIsExact: revenue.isExact,
+      rate: refundRate(refunds, revenue.total),
       partialCount: partialRefundCount(refunds),
       partialRetention: partialRetention(refunds),
       byReason: refundsByReason(refunds),
@@ -428,31 +525,48 @@ export function computePeriod(data, storeIds, window) {
 }
 
 /** The current period, the previous period, and a delta for every headline KPI. */
-export function computeComparison(data, storeIds) {
-  const p = periods(data.meta);
+export function computeComparison(data, storeIds, override) {
+  const p = periods(data.meta, override);
   const current = computePeriod(data, storeIds, p.current);
   const previous = computePeriod(data, storeIds, p.previous);
+
+  // When the comparison window falls outside the data set entirely, every
+  // "previous" figure would be a summed-from-nothing zero. Pass null instead so
+  // the UI says "no prior period" rather than claiming a real zero and showing
+  // a meaningless change against it.
+  const was = (value) => (previous.hasData ? value : null);
+
   return {
     current,
     previous,
     deltas: {
-      tickets_answered: delta(current.answered, previous.answered, 'tickets_answered'),
-      frt_median_hours: delta(current.frtMedianHours, previous.frtMedianHours, 'frt_median_hours'),
-      resolution_median_hours: delta(
-        current.resolutionMedianHours, previous.resolutionMedianHours, 'resolution_median_hours',
+      tickets_answered: delta(current.answered, was(previous.answered), 'tickets_answered'),
+      frt_median_hours: delta(
+        current.frtMedianHours, was(previous.frtMedianHours), 'frt_median_hours',
       ),
-      pct_answered_under_24h: delta(current.pctUnder24h, previous.pctUnder24h, 'pct_answered_under_24h'),
-      reopen_rate: delta(current.reopenRate, previous.reopenRate, 'reopen_rate'),
-      refund_rate: delta(current.refunds.rate, previous.refunds.rate, 'refund_rate'),
-      refund_total_usd: delta(current.refunds.totalUsd, previous.refunds.totalUsd, 'refund_total_usd'),
+      resolution_median_hours: delta(
+        current.resolutionMedianHours, was(previous.resolutionMedianHours),
+        'resolution_median_hours',
+      ),
+      pct_answered_under_24h: delta(
+        current.pctUnder24h, was(previous.pctUnder24h), 'pct_answered_under_24h',
+      ),
+      reopen_rate: delta(current.reopenRate, was(previous.reopenRate), 'reopen_rate'),
+      refund_rate: delta(current.refunds.rate, was(previous.refunds.rate), 'refund_rate'),
+      refund_total_usd: delta(
+        current.refunds.totalUsd, was(previous.refunds.totalUsd), 'refund_total_usd',
+      ),
       partial_retention: delta(
-        current.refunds.partialRetention, previous.refunds.partialRetention, 'partial_retention',
+        current.refunds.partialRetention, was(previous.refunds.partialRetention),
+        'partial_retention',
       ),
       replacement_cost_usd: delta(
-        current.replacements.totalCostUsd, previous.replacements.totalCostUsd, 'replacement_cost_usd',
+        current.replacements.totalCostUsd, was(previous.replacements.totalCostUsd),
+        'replacement_cost_usd',
       ),
       second_replacements: delta(
-        current.replacements.secondCount, previous.replacements.secondCount, 'second_replacements',
+        current.replacements.secondCount, was(previous.replacements.secondCount),
+        'second_replacements',
       ),
     },
   };
@@ -466,8 +580,8 @@ export function computeComparison(data, storeIds) {
  * store in scope — so a store answering 390 tickets moves the total more than
  * one answering 224, and the total is never the average of the three cells above it.
  */
-export function storeTable(data, storeIds) {
-  const p = periods(data.meta);
+export function storeTable(data, storeIds, override) {
+  const p = periods(data.meta, override);
   const scoped = storeIds ? data.stores.filter((s) => storeIds.includes(s.store_id)) : data.stores;
 
   const rows = scoped.map((store) => {
@@ -512,7 +626,8 @@ export function storeTable(data, storeIds) {
  * Days are returned in calendar order with a flag marking the period boundary
  * so the chart can draw the divider between the two weeks.
  */
-export function dailySeries(data, storeIds) {
+export function dailySeries(data, storeIds, override) {
+  const active = periods(data.meta, override).current;
   const scoped = storeIds ? data.stores.filter((s) => storeIds.includes(s.store_id)) : data.stores;
   const ids = scoped.map((s) => s.store_id);
   const rows = byStores(data.ticketRows, storeIds);
@@ -531,8 +646,8 @@ export function dailySeries(data, storeIds) {
     }
     return {
       date,
-      isCurrentPeriod: inPeriod(date, data.meta.period_start, data.meta.period_end),
-      isPeriodStart: date === data.meta.period_start,
+      isCurrentPeriod: inPeriod(date, active.start, active.end),
+      isPeriodStart: date === active.start,
       total: sum(Object.values(perStore).map((v) => v.answered)),
       perStore,
     };
@@ -624,8 +739,8 @@ export function agentTable(data, storeIds) {
  * in scope. Adding or removing a target in meta.json adds or removes a row here
  * with no code change.
  */
-export function goalsTable(data, storeIds) {
-  const p = periods(data.meta);
+export function goalsTable(data, storeIds, override) {
+  const p = periods(data.meta, override);
   const cur = computePeriod(data, storeIds, p.current);
   const snap = computeSnapshot(data, storeIds);
 

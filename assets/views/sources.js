@@ -169,7 +169,7 @@ const OPTIONS = [
    Render
    ========================================================================== */
 
-export function renderSources(mount, data, storeIds) {
+export function renderSources(mount, data, storeIds, period) {
   mount.textContent = '';
 
   const scopedStores = storeIds
@@ -259,8 +259,13 @@ export function renderSources(mount, data, storeIds) {
 
   const periodNote = el('p', 'section-note');
   periodNote.style.marginTop = '10px';
-  periodNote.textContent = `Reporting period ${fmt.dateFull(data.meta.period_start)} – `
-    + `${fmt.dateFull(data.meta.period_end)}. Generated ${fmt.timestamp(data.meta.generated_at)} `
+  const active = M.periods(data.meta, period).current;
+  const isDefault = active.start === data.meta.period_start && active.end === data.meta.period_end;
+  periodNote.textContent = `Reporting period ${fmt.dateFull(active.start)} – `
+    + `${fmt.dateFull(active.end)}`
+    + (isDefault ? '' : ` (custom range; meta.json ships ${fmt.date(data.meta.period_start)} – `
+      + `${fmt.date(data.meta.period_end)})`)
+    + `. Generated ${fmt.timestamp(data.meta.generated_at)} `
     + `in ${data.meta.reporting_timezone}. Timestamps are bucketed into that timezone before `
     + 'they become daily rows.';
   src.appendChild(periodNote);
@@ -283,22 +288,43 @@ export function renderSources(mount, data, storeIds) {
 
   const agg = section('How the stores add up', 'The rule that makes the total row honest.');
   const aggCard = card();
+
+  // Worked from the live figures for the period and stores actually in scope —
+  // never hardcoded, or this paragraph would quietly start lying the moment
+  // anyone moved the period or the data changed.
+  const scopedIds = scopedStores.map((s) => s.store_id);
+  const perStore = scopedStores.map((s) => ({
+    name: s.name,
+    frt: M.computePeriod(data, [s.store_id], active).frtMedianHours,
+    answered: M.computePeriod(data, [s.store_id], active).answered,
+  })).filter((s) => s.frt != null);
+  const pooled = M.computePeriod(data, scopedIds, active);
+  const plainAverage = perStore.length
+    ? perStore.reduce((a, s) => a + s.frt, 0) / perStore.length
+    : null;
+
+  const worked = perStore.length > 1
+    ? `<p>Concretely, in this period the store medians are
+       ${perStore.map((s) => `<code>${fmt.hours(s.frt)}</code> (${s.name},
+       ${fmt.int(s.answered)} tickets)`).join(', ')}. Their plain average would be
+       <code>${fmt.hours(plainAverage)}</code>. The figure the dashboard reports is
+       <code>${fmt.hours(pooled.frtMedianHours)}</code>, because it is the median of all
+       ${fmt.int(pooled.answered)} tickets rather than of ${perStore.length} numbers.</p>`
+    : `<p>With one store selected there is nothing to weight — the figure shown is simply the
+       median of its ${fmt.int(pooled.answered)} tickets. Select <em>All</em> to see the
+       weighting take effect.</p>`;
+
   const prose = el('div', 'prose');
   prose.innerHTML = `
     <p><strong>Counts and money sum.</strong> Tickets answered, refunds granted, replacement
     cost — adding them across stores is correct.</p>
     <p><strong>Medians and percentages do not.</strong> They are recomputed over the pooled
-    tickets of every store in scope, which weights them by volume. A store answering 390 tickets
-    moves the total more than one answering 224. This is why the total row is labelled
+    tickets of every store in scope, which weights them by volume. A busier store moves the
+    total more than a quieter one. This is why the total row is labelled
     <em>Total / weighted</em> and why it is never the average of the cells above it.</p>
-    <p>Concretely, in the current period the three store medians are
-    <code>3.7h</code>, <code>7.3h</code> and <code>5.5h</code>. Their plain average would be
-    <code>5.5h</code>. The weighted figure the dashboard reports is
-    <code>${fmt.hours(M.computePeriod(data, null, M.periods(data.meta).current).frtMedianHours)}</code>,
-    because it is the median of all ${fmt.int(M.computePeriod(data, null, M.periods(data.meta).current).answered)}
-    tickets rather than of three numbers.</p>
+    ${worked}
     <p>The same applies to the refund rate: it is total refunded USD over total revenue, not the
-    average of three store rates.</p>
+    average of the store rates.</p>
   `;
   aggCard.appendChild(prose);
   agg.appendChild(aggCard);
